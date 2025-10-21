@@ -1,0 +1,35 @@
+name: Extract behaviour_pack.zip
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Ensure unzip is available
+        run: sudo apt-get update && sudo apt-get install -y unzip
+
+      - name: Create extraction directory and unzip
+        run: |
+          mkdir -p extracted/behaviour_pack
+          if [ -f "./behaviour_pack.zip" ]; then
+            unzip -o "./behaviour_pack.zip" -d extracted/behaviour_pack
+          else
+            echo "behaviour_pack.zip not found at repository root" && exit 1
+          fi
+
+      - name: Commit extracted files to new branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b extracted-behaviour-pack
+          git add extracted
+          git commit -m "Add extracted behaviour_pack contents" || echo "No changes to commit"
+          git push --set-upstream origin extracted-behaviour-pack
